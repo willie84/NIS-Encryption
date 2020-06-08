@@ -10,6 +10,7 @@ public class clientHandler extends Thread{
 	static Object lock = new Object();
 	private Socket socket;
     static String filename;
+    private GenerateRSAKeys generateRSAKeys;
   
 	//constructor that takes a client socket
 	public clientHandler(Socket socket){
@@ -74,6 +75,12 @@ public class clientHandler extends Thread{
 	});
 
 	public void run(){
+		//create the keys first
+		generateRSAKeys = new GenerateRSAKeys("serverPublicKey.txt", "serverPrivateKey.txt");
+		generateRSAKeys.generate();
+		System.out.println("Keys generated.");
+
+		//start the send message thread
 		sendMessage.start();
 
 		try{

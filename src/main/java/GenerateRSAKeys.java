@@ -31,7 +31,7 @@ public class GenerateRSAKeys{
             // Create the public and private keys
             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "BC");
 
-            SecureRandom random = createFixedRandom();
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
             generator.initialize(1024, random);
 
             KeyPair pair = generator.generateKeyPair();
