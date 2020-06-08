@@ -10,11 +10,12 @@ public class clientHandler extends Thread{
 	static Object lock = new Object();
 	private Socket socket;
     static String filename;
-    private GenerateRSAKeys generateRSAKeys;
+	public GenerateRSAKeys generateServerKeys;
   
 	//constructor that takes a client socket
 	public clientHandler(Socket socket){
 		this.clientSocket = socket;
+		generateServerKeys = new GenerateRSAKeys("serverPublicKey.txt", "serverPrivateKey.txt");
 	}
 
     // Method to send file from server to client
@@ -64,8 +65,13 @@ public class clientHandler extends Thread{
 				while (true) {
 					// read the message to deliver.
 					String msg = scn.nextLine();
+
+					//encrypt the message
+					String encryptedMsg;
+					encryptedMsg = generateServerKeys.encrypt("serverPublicKey.txt", msg);
+					System.out.println(encryptedMsg);
 					// write on the output stream of the client
-					out.println("Server: "+msg);
+					out.println("Server: "+encryptedMsg);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -75,11 +81,6 @@ public class clientHandler extends Thread{
 	});
 
 	public void run(){
-		//create the keys first
-		generateRSAKeys = new GenerateRSAKeys("serverPublicKey.txt", "serverPrivateKey.txt");
-		generateRSAKeys.generate();
-		System.out.println("Keys generated.");
-
 		//start the send message thread
 		sendMessage.start();
 

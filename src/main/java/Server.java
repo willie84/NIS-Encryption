@@ -10,6 +10,7 @@ public class Server{
 	static Object lock = new Object();
 	private Socket socket;
 	static String filename;
+	static GenerateRSAKeys generateRSAKeys;
 
 	//main method
 	public static void main(String[] args) throws Exception{
@@ -22,6 +23,11 @@ public class Server{
 		}catch(IOException e){
 			System.out.println("IO "+e);
 		}
+
+		//create the keys first
+		generateRSAKeys = new GenerateRSAKeys("serverPublicKey.txt", "serverPrivateKey.txt");
+		generateRSAKeys.generate();
+		System.out.println("Keys generated.");
 
 		//listen for connection request from client
 		System.out.println("Listening for incoming client requests....");
