@@ -60,18 +60,18 @@ public class clientHandler extends Thread{
 		@Override
 		public void run() {
 			final Scanner scn = new Scanner(System.in);
+			String encryptedMsg;
 			try {
 				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 				while (true) {
 					// read the message to deliver.
 					String msg = scn.nextLine();
 
-					//encrypt the message
-					String encryptedMsg;
-					encryptedMsg = generateServerKeys.encrypt("serverPublicKey.txt", msg);
+					//encrypt the message with the server private key
+					encryptedMsg = generateServerKeys.encrypt("serverPrivateKey.txt", msg);
 					System.out.println(encryptedMsg);
 					// write on the output stream of the client
-					out.println("Server: "+encryptedMsg);
+					out.println(encryptedMsg);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

@@ -10,7 +10,7 @@ public class Client implements Runnable{
 	static volatile boolean flag = false;
 	static Object lock = new Object();
 	static Object lock2 = new Object();
-	static GenerateRSAKeys generateRSAKeys;
+	static GenerateRSAKeys generateClientRSAKeys;
     
     // sending image to serverThread
 	public static void sendFile(String fileName, Socket sock) throws Exception{
@@ -50,9 +50,9 @@ public class Client implements Runnable{
     // main method does writing in one thread
 	public static void main(String[] args){
 		//create the keys first
-		generateRSAKeys = new GenerateRSAKeys("clientPublicKey.txt", "clientPrivateKey");
-		generateRSAKeys.generate();
-		System.out.println("Keys generated.");
+		generateClientRSAKeys = new GenerateRSAKeys("clientPublicKey.txt", "clientPrivateKey");
+		generateClientRSAKeys.generate();
+		System.out.println("RSA Keys generated.");
 
 		//connect to server
 		try{
@@ -127,6 +127,7 @@ public class Client implements Runnable{
 	public void run(){
 		try{
 			//read messages sent from the server
+			String cipherText;
 			while(true){
 				  String line = in.readLine();
 				  if(line.equals("received")){
@@ -157,7 +158,10 @@ public class Client implements Runnable{
 						}
 					}
 					if (line.contains("sendingImage")){continue;}
-					System.out.println(line);
+
+					//decrypt the message with server public key
+					cipherText = generateClientRSAKeys.decrypt("serverPublicKey.txt", line);
+					System.out.println("Server: "+cipherText);
 				}
 		}
 		catch(Exception e){

@@ -3,6 +3,7 @@
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 import java.io.BufferedReader;
@@ -66,21 +67,21 @@ public class GenerateRSAKeys{
         }
     }
 
-    //method to encrypt a string message
-    synchronized String encrypt (String publicKeyFilename, String input){
+    //method to encrypt a string message using private key of sender
+    synchronized String encrypt (String privateKeyFilename, String input){
 
         try {
 
             //Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
             String value = "";
-            String key = readFileAsString(publicKeyFilename);
+            String key = readFileAsString(privateKeyFilename);
             //BASE64Decoder b64 = new BASE64Decoder();
-            AsymmetricKeyParameter publicKey =
-                    (AsymmetricKeyParameter) PublicKeyFactory.createKey(Base64.getDecoder().decode(key));
+            AsymmetricKeyParameter privateKey =
+                    (AsymmetricKeyParameter) PrivateKeyFactory.createKey(Base64.getDecoder().decode(key));
             AsymmetricBlockCipher e = new RSAEngine();
             e = new org.bouncycastle.crypto.encodings.PKCS1Encoding(e);
-            e.init(true, publicKey);
+            e.init(true, privateKey);
 
             byte[] messageBytes = input.getBytes();
             int i = 0;
@@ -105,6 +106,48 @@ public class GenerateRSAKeys{
         }
     }
 
+    //method to decrypt a string using public key of sender held by recipient
+    synchronized String decrypt (String senderPublicKeyFilename, String encryptedText){
+
+        try {
+
+            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+            String value = "";
+            String key = readFileAsString(senderPublicKeyFilename);
+            //BASE64Decoder b64 = new BASE64Decoder();
+            AsymmetricKeyParameter publicKey =
+                    (AsymmetricKeyParameter) PublicKeyFactory.createKey(Base64.getDecoder().decode(key));
+            AsymmetricBlockCipher e = new RSAEngine();
+            e = new org.bouncycastle.crypto.encodings.PKCS1Encoding(e);
+            e.init(false, publicKey);
+
+            byte[] messageBytes = hexStringToByteArray(encryptedText);
+
+            int i = 0;
+            int len = e.getInputBlockSize();
+            while (i < messageBytes.length)
+            {
+                if (i + len > messageBytes.length)
+                    len = messageBytes.length - i;
+
+                byte[] hexEncodedCipher = e.processBlock(messageBytes, i, len);
+                value = value + new String(hexEncodedCipher);
+                i += e.getInputBlockSize();
+            }
+
+
+            //System.out.println(value);
+            return value;
+
+
+        }
+        catch (Exception e) {
+            System.out.println(e);
+            return "Decryption unsuccessful :(";
+        }
+    }
+
     public static String getHexString(byte[] b) throws Exception {
         String result = "";
         for (int i=0; i < b.length; i++) {
@@ -112,6 +155,16 @@ public class GenerateRSAKeys{
                     Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
         }
         return result;
+    }
+
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
     }
 
     private static String readFileAsString(String filePath) throws java.io.IOException{
